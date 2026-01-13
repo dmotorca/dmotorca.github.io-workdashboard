@@ -79,6 +79,12 @@
         color: #667eea;
       }
 
+      .stat-card .subvalue {
+        font-size: 14px;
+        color: #888;
+        margin-top: 5px;
+      }
+
       .charts-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
@@ -142,19 +148,14 @@
         color: #155724;
       }
 
-      .status-progress {
-        background: #fff3cd;
-        color: #856404;
-      }
-
-      .status-notpossible {
+      .status-notstarted {
         background: #f8d7da;
         color: #721c24;
       }
 
-      .status-wirepulled {
-        background: #d1ecf1;
-        color: #0c5460;
+      .status-inprogress {
+        background: #fff3cd;
+        color: #856404;
       }
 
       .filter-section {
@@ -191,6 +192,40 @@
       button:hover {
         background: #5568d3;
       }
+
+      .line-tag {
+        display: inline-block;
+        padding: 2px 8px;
+        margin: 2px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+      }
+
+      .line-red {
+        background: #fee;
+        color: #c00;
+      }
+      .line-blue {
+        background: #def;
+        color: #05c;
+      }
+      .line-green {
+        background: #dfd;
+        color: #080;
+      }
+      .line-yellow {
+        background: #ffd;
+        color: #a90;
+      }
+      .line-orange {
+        background: #fed;
+        color: #f70;
+      }
+      .line-bus {
+        background: #eee;
+        color: #555;
+      }
     </style>
   </head>
   <body>
@@ -200,24 +235,28 @@
         <p>Real-time tracking of device installations across all locations</p>
 
         <div class="upload-section">
-          <label for="fileInput"><strong>Upload Excel/CSV File:</strong></label>
+          <label for="fileInput"
+            ><strong>Upload Excel/CSV File to Update:</strong></label
+          >
           <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" />
-          <button onclick="loadSampleData()">Load Sample Data</button>
+          <button onclick="loadDataFromCSV()">Reload Data</button>
         </div>
       </header>
 
       <div class="stats-grid" id="statsGrid">
         <div class="stat-card">
+          <h3>Total Locations</h3>
+          <div class="value" id="totalLocations">0</div>
+        </div>
+        <div class="stat-card">
           <h3>Total Devices</h3>
           <div class="value" id="totalDevices">0</div>
+          <div class="subvalue" id="deviceBreakdown"></div>
         </div>
         <div class="stat-card">
           <h3>Completed</h3>
-          <div class="value" id="completedDevices">0</div>
-        </div>
-        <div class="stat-card">
-          <h3>In Progress</h3>
-          <div class="value" id="inProgressDevices">0</div>
+          <div class="value" id="completedLocations">0</div>
+          <div class="subvalue" id="completedDevices"></div>
         </div>
         <div class="stat-card">
           <h3>Completion Rate</h3>
@@ -227,12 +266,46 @@
 
       <div class="charts-grid">
         <div class="chart-card">
-          <h2>Install Status Breakdown</h2>
+          <h2>Completion Status</h2>
           <canvas id="statusChart"></canvas>
         </div>
         <div class="chart-card">
-          <h2>Installs Over Time</h2>
+          <h2>Installations Over Time</h2>
           <canvas id="timelineChart"></canvas>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 20px;
+            "
+          >
+            <h2 style="margin: 0">Devices by MAX Line</h2>
+            <select
+              id="lineChartFilter"
+              onchange="updateLineChart()"
+              style="
+                padding: 8px 12px;
+                border: 1px solid #ddd;
+                border-radius: 6px;
+                font-size: 14px;
+              "
+            >
+              <option value="all">All Devices</option>
+              <option value="completed">Installed Devices</option>
+              <option value="notstarted">Planned Installs</option>
+            </select>
+          </div>
+          <canvas id="lineChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <h2>Monthly Install Progress</h2>
+          <canvas id="monthlyChart"></canvas>
         </div>
       </div>
 
@@ -242,12 +315,11 @@
           <select id="statusFilter" onchange="filterTable()">
             <option value="">All Statuses</option>
             <option value="Completed">Completed</option>
+            <option value="Not Started">Not Started</option>
             <option value="In Progress">In Progress</option>
-            <option value="Wire Pulled">Wire Pulled</option>
-            <option value="Not Possible">Not Possible</option>
           </select>
-          <select id="typeFilter" onchange="filterTable()">
-            <option value="">All Types</option>
+          <select id="lineFilter" onchange="filterTable()">
+            <option value="">All Lines</option>
           </select>
         </div>
         <div id="tableContainer"></div>
@@ -258,10 +330,45 @@
       let allData = [];
       let charts = {};
 
-      // File upload handler
       document
         .getElementById('fileInput')
         .addEventListener('change', handleFile);
+
+      // Auto-load data.csv on page load
+      window.addEventListener('load', loadDataFromCSV);
+
+      function loadDataFromCSV() {
+        fetch('data.csv')
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error('data.csv not found');
+            }
+            return response.text();
+          })
+          .then((csvText) => {
+            const rows = csvText.split('\n');
+            const headers = rows[0].split(',').map((h) => h.trim());
+
+            const data = [];
+            for (let i = 1; i < rows.length; i++) {
+              if (!rows[i].trim()) continue;
+
+              const values = rows[i].split(',');
+              const obj = {};
+              headers.forEach((header, index) => {
+                obj[header] = values[index] ? values[index].trim() : '';
+              });
+              data.push(obj);
+            }
+
+            processData(data);
+          })
+          .catch((error) => {
+            console.error('Error loading data.csv:', error);
+            document.getElementById('tableContainer').innerHTML =
+              '<div class="no-data">No data.csv file found. Please add a data.csv file to the same folder as this HTML file, or upload a file manually.</div>';
+          });
+      }
 
       function handleFile(e) {
         const file = e.target.files[0];
@@ -271,7 +378,10 @@
           const data = new Uint8Array(e.target.result);
           const workbook = XLSX.read(data, { type: 'array' });
           const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-          const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+          const jsonData = XLSX.utils.sheet_to_json(firstSheet, {
+            raw: false,
+            dateNF: 'mm/dd/yy',
+          });
 
           processData(jsonData);
         };
@@ -279,66 +389,25 @@
         reader.readAsArrayBuffer(file);
       }
 
-      function loadSampleData() {
-        // Sample data based on your example
-        const sampleData = [
-          {
-            'Stop ID': 8375,
-            'Location Name': 'NE 7th Ave MAX Station',
-            'Device Quantity': 1,
-            'Install Status': 'Completed',
-            'Install Date': '05/09/25',
-            Volume: '70%',
-            'Install Type': 'Voice Announcement',
-          },
-          {
-            'Stop ID': 13124,
-            'Location Name': 'SE Main St MAX Station (Southside)',
-            'Device Quantity': 1,
-            'Install Status': 'Completed',
-            'Install Date': '05/07/25',
-            Volume: '70%',
-            'Install Type': 'Voice Announcement',
-          },
-          {
-            'Stop ID': 8342,
-            'Location Name': 'NE 7th Ave MAX Station',
-            'Device Quantity': 1,
-            'Install Status': 'Completed',
-            'Install Date': '05/09/25',
-            Volume: '70%',
-            'Install Type': 'Voice Announcement',
-          },
-          {
-            'Stop ID': 8349,
-            'Location Name': 'E 122nd EB1',
-            'Device Quantity': 1,
-            'Install Status': 'Completed',
-            'Install Date': '06/03/25',
-            Volume: '70%',
-            'Install Type': 'Voice Announcement',
-          },
-          {
-            'Stop ID': 8334,
-            'Location Name': 'Pioneer Square South MAX Station EB3',
-            'Device Quantity': 1,
-            'Install Status': 'Completed',
-            'Install Date': '06/06/25',
-            Volume: '70%',
-            'Install Type': 'Voice Announcement',
-          },
-          {
-            'Stop ID': 7787,
-            'Location Name': 'SW 6th & Pine MAX Station',
-            'Device Quantity': 1,
-            'Install Status': 'Completed',
-            'Install Date': '12/02/25',
-            Volume: '85%',
-            'Install Type': 'MAX',
-          },
-        ];
+      function excelDateToJSDate(excelDate) {
+        if (!excelDate || excelDate === 'TBD' || isNaN(excelDate)) return null;
+        // Excel date: days since 1/1/1900
+        const date = new Date((excelDate - 25569) * 86400 * 1000);
+        return date;
+      }
 
-        processData(sampleData);
+      function formatDate(date) {
+        if (!date) return 'TBD';
+        if (typeof date === 'string' && date.includes('/')) return date;
+        if (typeof date === 'number') {
+          const jsDate = excelDateToJSDate(date);
+          if (!jsDate) return 'TBD';
+          const month = String(jsDate.getMonth() + 1).padStart(2, '0');
+          const day = String(jsDate.getDate()).padStart(2, '0');
+          const year = String(jsDate.getFullYear()).slice(-2);
+          return `${month}/${day}/${year}`;
+        }
+        return date;
       }
 
       function processData(data) {
@@ -350,33 +419,45 @@
       }
 
       function updateStats() {
-        const total = allData.length;
+        const totalLocs = allData.length;
+        const totalDevs = allData.reduce(
+          (sum, d) => sum + (parseInt(d['Quantity of Falcons']) || 0),
+          0
+        );
         const completed = allData.filter(
-          (d) => d['Install Status'] === 'Completed'
+          (d) => d['Completion Status'] === 'Completed'
         ).length;
-        const inProgress = allData.filter(
-          (d) => d['Install Status'] === 'In Progress'
-        ).length;
+        const completedDevs = allData
+          .filter((d) => d['Completion Status'] === 'Completed')
+          .reduce(
+            (sum, d) => sum + (parseInt(d['Quantity of Falcons']) || 0),
+            0
+          );
         const completionRate =
-          total > 0 ? Math.round((completed / total) * 100) : 0;
+          totalLocs > 0 ? Math.round((completed / totalLocs) * 100) : 0;
 
-        document.getElementById('totalDevices').textContent = total;
-        document.getElementById('completedDevices').textContent = completed;
-        document.getElementById('inProgressDevices').textContent = inProgress;
+        document.getElementById('totalLocations').textContent = totalLocs;
+        document.getElementById('totalDevices').textContent = totalDevs;
+        document.getElementById(
+          'deviceBreakdown'
+        ).textContent = `${totalLocs} locations`;
+        document.getElementById('completedLocations').textContent = completed;
+        document.getElementById(
+          'completedDevices'
+        ).textContent = `${completedDevs} devices`;
         document.getElementById('completionRate').textContent =
           completionRate + '%';
       }
 
       function updateCharts() {
-        // Status breakdown chart
+        // Status breakdown
         const statusCounts = {};
         allData.forEach((d) => {
-          const status = d['Install Status'] || 'Unknown';
+          const status = d['Completion Status'] || 'Unknown';
           statusCounts[status] = (statusCounts[status] || 0) + 1;
         });
 
         if (charts.statusChart) charts.statusChart.destroy();
-
         const ctx1 = document.getElementById('statusChart').getContext('2d');
         charts.statusChart = new Chart(ctx1, {
           type: 'doughnut',
@@ -385,42 +466,42 @@
             datasets: [
               {
                 data: Object.values(statusCounts),
-                backgroundColor: [
-                  '#10b981',
-                  '#f59e0b',
-                  '#ef4444',
-                  '#3b82f6',
-                  '#8b5cf6',
-                ],
+                backgroundColor: ['#10b981', '#ef4444', '#f59e0b', '#3b82f6'],
               },
             ],
           },
           options: {
             responsive: true,
             maintainAspectRatio: true,
-            plugins: {
-              legend: {
-                position: 'bottom',
-              },
-            },
+            plugins: { legend: { position: 'bottom' } },
           },
         });
 
-        // Timeline chart
+        // Timeline
+        const completedData = allData.filter(
+          (d) =>
+            d['Completion Status'] === 'Completed' &&
+            d['Date Installed?'] &&
+            d['Date Installed?'] !== 'TBD'
+        );
+
         const dateData = {};
-        allData.forEach((d) => {
-          const date = d['Install Date'];
-          if (date) {
-            dateData[date] = (dateData[date] || 0) + 1;
+        completedData.forEach((d) => {
+          const dateStr = formatDate(d['Date Installed?']);
+          if (dateStr && dateStr !== 'TBD') {
+            dateData[dateStr] =
+              (dateData[dateStr] || 0) +
+              parseInt(d['Quantity of Falcons'] || 1);
           }
         });
 
         const sortedDates = Object.keys(dateData).sort((a, b) => {
-          const dateA = new Date(a);
-          const dateB = new Date(b);
-          return dateA - dateB;
+          const parseDate = (str) => {
+            const [m, d, y] = str.split('/');
+            return new Date(`20${y}`, m - 1, d);
+          };
+          return parseDate(a) - parseDate(b);
         });
-
         let cumulative = 0;
         const cumulativeData = sortedDates.map((date) => {
           cumulative += dateData[date];
@@ -428,7 +509,6 @@
         });
 
         if (charts.timelineChart) charts.timelineChart.destroy();
-
         const ctx2 = document.getElementById('timelineChart').getContext('2d');
         charts.timelineChart = new Chart(ctx2, {
           type: 'line',
@@ -436,7 +516,7 @@
             labels: sortedDates,
             datasets: [
               {
-                label: 'Cumulative Installs',
+                label: 'Cumulative Devices',
                 data: cumulativeData,
                 borderColor: '#667eea',
                 backgroundColor: 'rgba(102, 126, 234, 0.1)',
@@ -448,18 +528,122 @@
           options: {
             responsive: true,
             maintainAspectRatio: true,
-            plugins: {
-              legend: {
-                display: false,
-              },
-            },
-            scales: {
-              y: {
-                beginAtZero: true,
-              },
-            },
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } },
           },
         });
+
+        // Lines breakdown
+        updateLineChart();
+
+        // Monthly progress
+        const monthlyData = {};
+        completedData.forEach((d) => {
+          const dateStr = formatDate(d['Date Installed?']);
+          if (dateStr && dateStr !== 'TBD') {
+            const [m, day, y] = dateStr.split('/');
+            const monthKey = `20${y}-${m.padStart(2, '0')}`;
+            monthlyData[monthKey] =
+              (monthlyData[monthKey] || 0) +
+              parseInt(d['Quantity of Falcons'] || 1);
+          }
+        });
+
+        const sortedMonths = Object.keys(monthlyData).sort();
+
+        if (charts.monthlyChart) charts.monthlyChart.destroy();
+        const ctx4 = document.getElementById('monthlyChart').getContext('2d');
+        charts.monthlyChart = new Chart(ctx4, {
+          type: 'bar',
+          data: {
+            labels: sortedMonths.map((m) => {
+              const [year, month] = m.split('-');
+              return `${month}/${year}`;
+            }),
+            datasets: [
+              {
+                label: 'Devices Installed',
+                data: sortedMonths.map((m) => monthlyData[m]),
+                backgroundColor: '#10b981',
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } },
+          },
+        });
+      }
+
+      function updateLineChart() {
+        const filterValue = document.getElementById('lineChartFilter').value;
+
+        let filteredData = allData;
+        let chartColor = '#667eea';
+        let chartLabel = 'All Devices';
+
+        if (filterValue === 'completed') {
+          filteredData = allData.filter(
+            (d) => d['Completion Status'] === 'Completed'
+          );
+          chartColor = '#10b981';
+          chartLabel = 'Installed Devices';
+        } else if (filterValue === 'notstarted') {
+          filteredData = allData.filter(
+            (d) => d['Completion Status'] === 'Not Started'
+          );
+          chartColor = '#ef4444';
+          chartLabel = 'Planned Installs';
+        }
+
+        const lineCounts = {};
+        filteredData.forEach((d) => {
+          const lines = (d['MAX Lines'] || '').split(',');
+          lines.forEach((line) => {
+            const trimmed = line.trim();
+            if (trimmed) {
+              lineCounts[trimmed] =
+                (lineCounts[trimmed] || 0) +
+                parseInt(d['Quantity of Falcons'] || 0);
+            }
+          });
+        });
+
+        if (charts.lineChart) charts.lineChart.destroy();
+        const ctx3 = document.getElementById('lineChart').getContext('2d');
+        charts.lineChart = new Chart(ctx3, {
+          type: 'bar',
+          data: {
+            labels: Object.keys(lineCounts),
+            datasets: [
+              {
+                label: chartLabel,
+                data: Object.values(lineCounts),
+                backgroundColor: chartColor,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } },
+          },
+        });
+      }
+
+      function formatLines(linesStr) {
+        if (!linesStr) return '';
+        const lines = linesStr.split(',');
+        return lines
+          .map((line) => {
+            const trimmed = line.trim();
+            const className = trimmed.toLowerCase().replace(/\s+/g, '-');
+            return `<span class="line-tag line-${className}">${trimmed}</span>`;
+          })
+          .join(' ');
       }
 
       function updateTable() {
@@ -474,35 +658,34 @@
         let html = '<table><thead><tr>';
         html += '<th>Stop ID</th>';
         html += '<th>Location Name</th>';
-        html += '<th>Device Qty</th>';
         html += '<th>Status</th>';
-        html += '<th>Install Date</th>';
-        html += '<th>Volume</th>';
-        html += '<th>Type</th>';
+        html += '<th>Devices</th>';
+        html += '<th>MAX Lines</th>';
+        html += '<th>Date Installed</th>';
         html += '</tr></thead><tbody>';
 
         const statusFilter = document.getElementById('statusFilter').value;
-        const typeFilter = document.getElementById('typeFilter').value;
+        const lineFilter = document.getElementById('lineFilter').value;
 
         const filteredData = allData.filter((d) => {
-          if (statusFilter && d['Install Status'] !== statusFilter)
+          if (statusFilter && d['Completion Status'] !== statusFilter)
             return false;
-          if (typeFilter && d['Install Type'] !== typeFilter) return false;
+          if (lineFilter && !(d['MAX Lines'] || '').includes(lineFilter))
+            return false;
           return true;
         });
 
         filteredData.forEach((d) => {
-          const status = d['Install Status'] || 'Unknown';
+          const status = d['Completion Status'] || 'Unknown';
           const statusClass = status.toLowerCase().replace(/\s+/g, '');
 
           html += '<tr>';
           html += `<td>${d['Stop ID'] || 'N/A'}</td>`;
           html += `<td>${d['Location Name'] || 'N/A'}</td>`;
-          html += `<td>${d['Device Quantity'] || 0}</td>`;
           html += `<td><span class="status-badge status-${statusClass}">${status}</span></td>`;
-          html += `<td>${d['Install Date'] || 'N/A'}</td>`;
-          html += `<td>${d['Volume'] || 'N/A'}</td>`;
-          html += `<td>${d['Install Type'] || 'N/A'}</td>`;
+          html += `<td>${d['Quantity of Falcons'] || 0}</td>`;
+          html += `<td>${formatLines(d['MAX Lines'])}</td>`;
+          html += `<td>${formatDate(d['Date Installed?'])}</td>`;
           html += '</tr>';
         });
 
@@ -511,23 +694,25 @@
       }
 
       function updateFilters() {
-        const types = [
-          ...new Set(allData.map((d) => d['Install Type']).filter(Boolean)),
-        ];
-        const typeFilter = document.getElementById('typeFilter');
+        const allLines = new Set();
+        allData.forEach((d) => {
+          const lines = (d['MAX Lines'] || '').split(',');
+          lines.forEach((line) => {
+            const trimmed = line.trim();
+            if (trimmed) allLines.add(trimmed);
+          });
+        });
 
-        typeFilter.innerHTML = '<option value="">All Types</option>';
-        types.forEach((type) => {
-          typeFilter.innerHTML += `<option value="${type}">${type}</option>`;
+        const lineFilter = document.getElementById('lineFilter');
+        lineFilter.innerHTML = '<option value="">All Lines</option>';
+        [...allLines].sort().forEach((line) => {
+          lineFilter.innerHTML += `<option value="${line}">${line}</option>`;
         });
       }
 
       function filterTable() {
         updateTable();
       }
-
-      // Load sample data on page load
-      window.addEventListener('load', loadSampleData);
     </script>
   </body>
 </html>

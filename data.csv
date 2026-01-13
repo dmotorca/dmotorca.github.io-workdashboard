@@ -1,0 +1,160 @@
+Stop ID,Location Name,Completion Status,Quantity of Falcons,MAX Lines,Date Installed?
+7601,Union Station/NW 5th & Glisan St,Completed,2,"Green Line,Orange Line,Bus Mall",11/20/25
+7606,PSU South/SW 5th & Jackson St,Completed,2,"Green Line,Orange Line,Bus Mall",8/4/25
+7608,City Hall/SW 5th & Jefferson St,Completed,2,"Green Line,Orange Line,Bus Mall",12/3/25
+7618,PSU Urban Center/SW 5th & Mill St,Completed,2,"Green Line,Orange Line,Bus Mall",8/4/25
+7627,SW 5th & Oak St,Completed,2,"Green Line,Orange Line,Bus Mall",12/3/25
+7646,Pioneer Place/SW 5th Ave,Completed,2,"Green Line,Orange Line,Bus Mall",9/3/25
+7763,Union Station/NW 6th & Hoyt St,Completed,2,"Green Line,Yellow Line,Bus Mall",12/9/25
+7774,PSU Urban Center/SW 6th & Montgomery St,Completed,2,"Green Line,Yellow Line,Bus Mall",8/4/25
+7777,Pioneer Courthouse/SW 6th Ave,Completed,2,"Green Line,Yellow Line,Bus Mall",8/11/25
+7787,SW 6th & Pine St,Completed,2,"Green Line,Yellow Line,Bus Mall",12/2/25
+8333,Library/SW 9th Ave EB,Completed,2,"Red Line,Blue Line",7/28/25
+8334,Pioneer Square South,Completed,3,"Red Line,Blue Line",7/23/25
+8336,Yamhill District,Not Started,2,"Red Line,Blue Line",TBD
+8337,Oak/SW 1st Ave EB,Not Started,2,"Red Line,Blue Line",TBD
+8339,Old Town/Chinatown EB,Not Started,2,"Red Line,Blue Line",TBD
+8340,Rose Quarter TC EB,Not Started,2,"Red Line,Green Line,Blue Line",TBD
+8341,Convention Center EB,Not Started,2,"Red Line,Green Line,Blue Line",TBD
+8342,NE 7th Ave EB,"Not Possible,Completed",1,"Red Line,Green Line,Blue Line",5/7/25
+8343,Lloyd Center/NE 11th Ave EB,Completed,2,"Red Line,Green Line,Blue Line",7/28/25
+8344,Hollywood TC EB,Not Started,2,"Red Line,Green Line,Blue Line",TBD
+8345,NE 60th Ave EB,Not Started,2,"Red Line,Green Line,Blue Line",TBD
+8346,NE 82nd Ave EB,Not Started,2,"Red Line,Green Line,Blue Line",TBD
+8347,Gateway/NE 99th Ave TC MAX Station,Completed,3,"Red Line,Green Line,Blue Line",11/20/25
+8348,E 102nd Ave EB,Completed,1,Blue Line,7/16/25
+8349,E 122nd Ave EB,Completed,1,Blue Line,5/29/25
+8350,E 148th Ave EB,Completed,1,Blue Line,7/17/25
+8351,E 162nd Ave EB,Completed,1,Blue Line,6/9/25
+8352,E 172nd Ave EB,Not Started,1,Blue Line,TBD
+8353,E 181st Ave EB,Not Started,1,Blue Line,TBD
+8354,Rockwood/E 188th Ave EB,Not Started,1,Blue Line,TBD
+8355,Ruby Junction/E 197th Ave EB,Not Started,1,Blue Line,TBD
+8356,Gresham City Hall EB,Not Started,1,Blue Line,TBD
+8357,Gresham Central TC EB,Not Started,1,Blue Line,TBD
+8359,Cleveland Ave,Completed,2,Blue Line,11/3/25
+8360,Gresham Central TC WB,Not Started,1,Blue Line,TBD
+8361,Gresham City Hall WB,Not Started,1,Blue Line,TBD
+8362,Ruby Junction/E 197th Ave WB,Not Started,1,Blue Line,TBD
+8363,Rockwood/E 188th Ave WB,Not Started,1,Blue Line,TBD
+8364,E 181st Ave WB,Not Started,1,Blue Line,TBD
+8365,E 172nd Ave WB,Not Started,1,Blue Line,TBD
+8366,E 162nd Ave WB,Completed,1,Blue Line,6/9/25
+8367,E 148th Ave WB,Completed,1,Blue Line,7/17/25
+8369,E 102nd Ave WB,Completed,1,Blue Line,7/16/25
+8370,Gateway/NE 99th Ave TC MAX Station,Completed,5,"Red Line,Green Line,Blue Line",11/20/25
+8371,NE 82nd Ave WB,Not Started,2,"Red Line,Green Line,Blue Line",TBD
+8372,NE 60th Ave WB,Not Started,2,"Red Line,Green Line,Blue Line",TBD
+8373,Hollywood TC WB,Not Started,2,"Red Line,Green Line,Blue Line",TBD
+8374,Lloyd Center/NE 11th Ave WB,Completed,2,"Red Line,Green Line,Blue Line",7/28/25
+8375,NE 7th Ave WB,"Not Possible,Completed",1,"Red Line,Green Line,Blue Line",5/7/25
+8376,Convention Center WB,Not Started,2,"Red Line,Green Line,Blue Line",TBD
+8377,Rose Quarter TC WB,Not Started,2,"Red Line,Green Line,Blue Line",TBD
+8378,Old Town/Chinatown WB,Not Started,2,"Red Line,Blue Line",TBD
+8380,Oak/SW 1st Ave WB,Not Started,2,"Red Line,Blue Line",TBD
+8381,Morrison/SW 3rd Ave,Not Started,2,"Red Line,Blue Line",TBD
+8383,Pioneer Square North,Completed,3,"Red Line,Blue Line",7/23/25
+8383,E 122nd Ave WB,Completed,1,Blue Line,5/29/25
+8384,Galleria/SW 10th Ave,Completed,2,"Red Line,Blue Line",10/30/25
+9299,NW 6th & Davis St,Completed,2,"Green Line,Yellow Line,Bus Mall",12/1/25
+9303,NW 5th & Couch St,Completed,2,"Green Line,Orange Line,Bus Mall",12/5/25
+9624,Sunset TC WB,Completed,3,"Red Line,Blue Line",10/27/25
+9757,Providence Park WB,Completed,2,"Red Line,Blue Line",8/4/25
+9758,Providence Park EB,Completed,2,"Red Line,Blue Line",8/4/25
+9818,Beaverton TC WB,Not Started,2,"Red Line,Blue Line",TBD
+9819,Beaverton Creek WB,Not Started,2,"Red Line,Blue Line",TBD
+9821,Beaverton TC EB,Not Started,3,"Red Line,Blue Line",TBD
+9822,Beaverton Creek EB,Not Started,2,"Red Line,Blue Line",TBD
+9823,Beaverton Central WB,Not Started,2,"Red Line,Blue Line",TBD
+9824,Beaverton Central EB,Not Started,2,"Red Line,Blue Line",TBD
+9825,Millikan Way WB,Not Started,2,"Red Line,Blue Line",TBD
+9826,Millikan Way EB,Not Started,2,"Red Line,Blue Line",TBD
+9827,Merlo/SW 158th Ave,Not Started,1,"Red Line,Blue Line",TBD
+9829,Elmonica/SW 170th Ave WB,Not Started,2,"Red Line,Blue Line",TBD
+9830,Elmonica/SW 170th Ave EB,Not Started,2,"Red Line,Blue Line",TBD
+9831,Willow Creek/SW 185th Ave TC EB,Not Started,1,"Red Line,Blue Line",TBD
+9832,Willow Creek/SW 185th Ave TC WB,Not Started,1,"Red Line,Blue Line",TBD
+9833,Quatama WB,Not Started,2,"Red Line,Blue Line",TBD
+9834,Quatama EB,Not Started,2,"Red Line,Blue Line",TBD
+9835,Orenco/NW 231st Ave EB,Not Started,1,"Red Line,Blue Line",TBD
+9836,Orenco/NW 231st Ave WB,Not Started,1,"Red Line,Blue Line",TBD
+9837,Hillsboro Airport/Fairgrounds WB,Completed,2,"Red Line,Blue Line",9/5/25
+9838,Hillsboro Airport/Fairgrounds EB,Completed,2,"Red Line,Blue Line",9/5/25
+9840,Hawthorn Farm,Not Started,1,"Red Line,Blue Line",TBD
+9841,Washington/SE 12th Ave EB,Not Started,1,Blue Line,TBD
+9842,Washington/SE 12th Ave WB,Not Started,1,Blue Line,TBD
+9843,Hillsboro Health District EB,Not Started,1,Blue Line,TBD
+9844,Hillsboro Central/SE 3rd Ave TC WB,Not Started,1,Blue Line,TBD
+9844,Hillsboro Health District WB,Not Started,1,Blue Line,TBD
+9846,Hillsboro Central/SE 3rd Ave TC EB,Not Started,1,Blue Line,TBD
+9848,Hatfield Government Center,Completed,4,Blue Line,12/10/25
+9969,Sunset TC EB,Completed,2,"Red Line,Blue Line",10/27/25
+10117,Goose Hollow/SW Jefferson St WB,Not Started,2,"Red Line,Blue Line",TBD
+10118,Goose Hollow/SW Jefferson St EB,Not Started,2,"Red Line,Blue Line",TBD
+10120,Washington Park EB,Not Started,2,"Red Line,Blue Line",TBD
+10121,Washington Park WB,Not Started,2,"Red Line,Blue Line",TBD
+10293,PSU South/SW 6th & College St,Completed,2,"Green Line,Yellow Line,Bus Mall",12/3/25
+10572,Parkrose/Sumner TC,Not Started,1,Red Line,TBD
+10573,Parkrose/Sumner TC,Not Started,1,Red Line,TBD
+10574,Cascades,Not Started,2,Red Line,TBD
+10575,Cascades,Not Started,2,Red Line,TBD
+10576,Mt Hood Ave,Not Started,2,Red Line,TBD
+10577,Mt Hood Ave ,Not Started,2,Red Line,TBD
+10579,Portland International Airport,Not Started,2,Red Line,TBD
+11498,Expo Center ,Not Started,2,Yellow Line,TBD
+11499,Delta Park/Vanport SB,Completed,2,Yellow Line,9/3/25
+11500,Kenton/N Denver Ave SB,Not Started,2,Yellow Line,TBD
+11501,N Lombard TC SB,Not Started,2,Yellow Line,TBD
+11502,Rosa Parks SB,Not Started,2,Yellow Line,TBD
+11503,N Killingsworth St SB,"Not Possible,Completed",1,Yellow Line,8/18/25
+11504,N Prescott St  SB,Not Started,1,Yellow Line,TBD
+11505,Overlook Park SB,Not Started,2,Yellow Line,TBD
+11506,Albina/Mississippi SB,Not Started,2,Yellow Line,TBD
+11507,Interstate/Rose Quarter SB,Completed,2,Yellow Line,8/11/25
+11509,Albina/Mississippi NB,Not Started,2,Yellow Line,TBD
+11510,Overlook Park NB,Not Started,2,Yellow Line,TBD
+11511,N Prescott St NB,Not Started,1,Yellow Line,TBD
+11512,N Killingsworth St NB,Completed,2,Yellow Line,8/18/25
+11513,Rosa Parks NB,Not Started,2,Yellow Line,TBD
+11514,N Lombard TC NB,Not Started,2,Yellow Line,TBD
+11515,Kenton/N Denver Ave NB,Not Started,2,Yellow Line,TBD
+11516,Delta Park/Vanport NB,Completed,3,Yellow Line,9/3/25
+12922,Clackamas Town Center TC,Not Started,2,Green Line,TBD
+13123,SW 6th & Madison St,Completed,2,"Green Line,Yellow Line,Bus Mall",12/1/25
+13124,Interstate/Rose Quarter NB,Completed,2,Yellow Line,8/11/25
+13124,SE Main St,Completed,1,Green Line,5/7/25
+13125,SE Division St,Completed,1,Green Line,9/11/25
+13126,SE Powell Blvd,Completed,1,Green Line,9/23/25
+13127,SE Holgate Blvd,Completed,1,Green Line,9/25/25
+13128,Lents Town Center/SE Foster Rd,Completed,1,Green Line,9/24/25
+13129,SE Flavel St,Completed,1,Green Line,9/24/25
+13130,SE Fuller Rd,Completed,1,Green Line,9/10/25
+13133,SE Fuller Rd,Completed,1,Green Line,9/10/25
+13134,SE Flavel St,Completed,1,Green Line,9/24/25
+13136,SE Holgate Blvd,Completed,1,Green Line,9/25/25
+13136,Lents Town Center/SE Foster Rd,Completed,1,Green Line,9/24/25
+13137,SE Powell Blvd,Completed,1,Green Line,9/23/25
+13138,SE Division St,Completed,1,Green Line,9/11/25
+13139,SE Main St,Completed,1,Green Line,5/7/25
+13449,Civic Drive WB,Not Started,1,Blue Line,TBD
+13450,Civic Drive EB,Not Started,1,Blue Line,TBD
+13710,Lincoln St/SW 3rd Ave SB,Not Started,1,Orange Line,TBD
+13711,South Waterfront/S Moody Ave,"Wire Pulled, Waiting on Mount",2,Orange Line,TBD
+13712,OMSI/SE Water Ave EB,Completed,2,Orange Line,12/18/25
+13713,Clinton/SE 12th Ave,Completed,1,Orange Line,1/6/26
+13714,SE 17th Ave & Rhine St,"Wire Pulled, Waiting on Mount",1,Orange Line,TBD
+13715,SE 17th Ave & Holgate Blvd,Completed,1,Orange Line,12/24/25
+13716,SE Bybee Blvd,Not Started,2,Orange Line,TBD
+13717,SE Tacoma/Johnson Creek,"Wire Pulled, Waiting on Mount",1,Orange Line,TBD
+13718,Milwaukie/Main St,Not Started,2,Orange Line,TBD
+13720,SE Park Ave,Completed,4,Orange Line,7/14/25
+13721,Milwaukie/Main St,Not Started,2,Orange Line,TBD
+13722,SE Tacoma/Johnson Creek,"Wire Pulled, Waiting on Mount",1,Orange Line,TBD
+13723,SE Bybee Blvd,Not Started,2,Orange Line,TBD
+13724,SE 17th Ave & Holgate Blvd,Completed,1,Orange Line,12/24/25
+13725,SE 17th Ave & Rhine St,"Wire Pulled, Waiting on Mount",1,Orange Line,TBD
+13726,Clinton/SE 12th Ave,Completed,1,Orange Line,1/6/26
+13727,OMSI/SE Water Ave WB,Completed,2,Orange Line,12/18/25
+13728,South Waterfront/S Moody Ave,"Wire Pulled, Waiting on Mount",2,Orange Line,TBD
+13729,Lincoln St/SW 3rd Ave NB,Not Started,1,Orange Line,TBD
+14250,Gateway North,Completed,2,Red Line,11/3/25
