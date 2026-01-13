@@ -4,7 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Falcon ADA Project Dashboard</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
       * {
@@ -39,17 +38,10 @@
         margin-bottom: 10px;
       }
 
-      .upload-section {
-        margin-top: 20px;
-        padding: 20px;
-        background: #f8f9fa;
-        border-radius: 8px;
-        border: 2px dashed #667eea;
-      }
-
-      .upload-section input {
-        display: block;
-        margin: 10px 0;
+      .last-updated {
+        color: #666;
+        font-size: 14px;
+        margin-top: 10px;
       }
 
       .stats-grid {
@@ -178,19 +170,12 @@
         color: #666;
       }
 
-      button {
-        background: #667eea;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 14px;
-        font-weight: 600;
-      }
-
-      button:hover {
-        background: #5568d3;
+      .error-message {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 20px 0;
       }
 
       .line-tag {
@@ -233,34 +218,27 @@
       <header>
         <h1>🚆 Falcon ADA Project Dashboard</h1>
         <p>Real-time tracking of device installations across all locations</p>
-
-        <div class="upload-section">
-          <label for="fileInput"
-            ><strong>Upload Excel/CSV File to Update:</strong></label
-          >
-          <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" />
-          <button onclick="loadDataFromCSV()">Reload Data</button>
-        </div>
+        <div class="last-updated" id="lastUpdated">Loading data...</div>
       </header>
 
       <div class="stats-grid" id="statsGrid">
         <div class="stat-card">
           <h3>Total Locations</h3>
-          <div class="value" id="totalLocations">0</div>
+          <div class="value" id="totalLocations">-</div>
         </div>
         <div class="stat-card">
           <h3>Total Devices</h3>
-          <div class="value" id="totalDevices">0</div>
+          <div class="value" id="totalDevices">-</div>
           <div class="subvalue" id="deviceBreakdown"></div>
         </div>
         <div class="stat-card">
           <h3>Completed</h3>
-          <div class="value" id="completedLocations">0</div>
+          <div class="value" id="completedLocations">-</div>
           <div class="subvalue" id="completedDevices"></div>
         </div>
         <div class="stat-card">
           <h3>Completion Rate</h3>
-          <div class="value" id="completionRate">0%</div>
+          <div class="value" id="completionRate">-%</div>
         </div>
       </div>
 
@@ -330,10 +308,6 @@
       let allData = [];
       let charts = {};
 
-      document
-        .getElementById('fileInput')
-        .addEventListener('change', handleFile);
-
       // Auto-load data.csv on page load
       window.addEventListener('load', loadDataFromCSV);
 
@@ -341,77 +315,135 @@
         fetch('data.csv')
           .then((response) => {
             if (!response.ok) {
-              throw new Error('data.csv not found');
+              throw new Error('Could not load data.csv');
             }
             return response.text();
           })
           .then((csvText) => {
-            const rows = csvText.split('\n');
-            const headers = rows[0].split(',').map((h) => h.trim());
-
-            const data = [];
-            for (let i = 1; i < rows.length; i++) {
-              if (!rows[i].trim()) continue;
-
-              const values = rows[i].split(',');
-              const obj = {};
-              headers.forEach((header, index) => {
-                obj[header] = values[index] ? values[index].trim() : '';
-              });
-              data.push(obj);
+            const data = parseCSV(csvText);
+            if (data && data.length > 0) {
+              processData(data);
+              document.getElementById(
+                'lastUpdated'
+              ).textContent = `Last updated: ${new Date().toLocaleString()}`;
+            } else {
+              showError('No data found in data.csv');
             }
-
-            processData(data);
           })
           .catch((error) => {
-            console.error('Error loading data.csv:', error);
-            document.getElementById('tableContainer').innerHTML =
-              '<div class="no-data">No data.csv file found. Please add a data.csv file to the same folder as this HTML file, or upload a file manually.</div>';
+            showError(
+              'Error loading data.csv: ' +
+                error.message +
+                '. Make sure data.csv is in the same folder as index.html'
+            );
+            console.error('Load error:', error);
           });
       }
 
-      function handleFile(e) {
-        const file = e.target.files[0];
-        const reader = new FileReader();
+      function parseCSV(csvText) {
+        const lines = csvText.split('\n').filter((line) => line.trim());
+        if (lines.length < 2) return [];
 
-        reader.onload = function (e) {
-          const data = new Uint8Array(e.target.result);
-          const workbook = XLSX.read(data, { type: 'array' });
-          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-          const jsonData = XLSX.utils.sheet_to_json(firstSheet, {
-            raw: false,
-            dateNF: 'mm/dd/yy',
+        const headers = parseCSVLine(lines[0]);
+        const data = [];
+
+        for (let i = 1; i < lines.length; i++) {
+          const values = parseCSVLine(lines[i]);
+          if (values.length === 0) continue;
+
+          const row = {};
+          headers.forEach((header, index) => {
+            row[header] = values[index] || '';
           });
-
-          processData(jsonData);
-        };
-
-        reader.readAsArrayBuffer(file);
-      }
-
-      function excelDateToJSDate(excelDate) {
-        if (!excelDate || excelDate === 'TBD' || isNaN(excelDate)) return null;
-        // Excel date: days since 1/1/1900
-        const date = new Date((excelDate - 25569) * 86400 * 1000);
-        return date;
-      }
-
-      function formatDate(date) {
-        if (!date) return 'TBD';
-        if (typeof date === 'string' && date.includes('/')) return date;
-        if (typeof date === 'number') {
-          const jsDate = excelDateToJSDate(date);
-          if (!jsDate) return 'TBD';
-          const month = String(jsDate.getMonth() + 1).padStart(2, '0');
-          const day = String(jsDate.getDate()).padStart(2, '0');
-          const year = String(jsDate.getFullYear()).slice(-2);
-          return `${month}/${day}/${year}`;
+          data.push(row);
         }
-        return date;
+
+        return data;
+      }
+
+      function parseCSVLine(line) {
+        const result = [];
+        let current = '';
+        let insideQuotes = false;
+
+        for (let i = 0; i < line.length; i++) {
+          const char = line[i];
+
+          if (char === '"') {
+            insideQuotes = !insideQuotes;
+          } else if (char === ',' && !insideQuotes) {
+            result.push(current.trim());
+            current = '';
+          } else {
+            current += char;
+          }
+        }
+
+        result.push(current.trim());
+        return result;
+      }
+
+      function showError(message) {
+        document.getElementById(
+          'lastUpdated'
+        ).innerHTML = `<div class="error-message">${message}</div>`;
+      }
+
+      function parseDate(dateStr) {
+        if (!dateStr || dateStr === 'TBD' || dateStr.trim() === '') return null;
+
+        // Handle MM/DD/YY format
+        const parts = dateStr.trim().split('/');
+        if (parts.length === 3) {
+          let [month, day, year] = parts;
+          month = parseInt(month);
+          day = parseInt(day);
+          year = parseInt(year);
+
+          // Convert 2-digit year to 4-digit
+          if (year < 100) {
+            year = year < 50 ? 2000 + year : 1900 + year;
+          }
+
+          return new Date(year, month - 1, day);
+        }
+
+        return null;
+      }
+
+      function formatDate(dateStr) {
+        if (!dateStr || dateStr === 'TBD' || dateStr.trim() === '')
+          return 'TBD';
+
+        const date = parseDate(dateStr);
+        if (!date || isNaN(date.getTime())) return dateStr;
+
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const year = String(date.getFullYear()).slice(-2);
+
+        return `${month}/${day}/${year}`;
       }
 
       function processData(data) {
-        allData = data;
+        // Clean and validate data
+        allData = data
+          .filter((row) => {
+            return row['Stop ID'] && row['Location Name'];
+          })
+          .map((row) => {
+            return {
+              'Stop ID': String(row['Stop ID']).trim(),
+              'Location Name': String(row['Location Name']).trim(),
+              'Completion Status': String(
+                row['Completion Status'] || ''
+              ).trim(),
+              'Quantity of Falcons': parseInt(row['Quantity of Falcons']) || 0,
+              'MAX Lines': String(row['MAX Lines'] || '').trim(),
+              'Date Installed?': String(row['Date Installed?'] || '').trim(),
+            };
+          });
+
         updateStats();
         updateCharts();
         updateTable();
@@ -421,7 +453,7 @@
       function updateStats() {
         const totalLocs = allData.length;
         const totalDevs = allData.reduce(
-          (sum, d) => sum + (parseInt(d['Quantity of Falcons']) || 0),
+          (sum, d) => sum + d['Quantity of Falcons'],
           0
         );
         const completed = allData.filter(
@@ -429,10 +461,7 @@
         ).length;
         const completedDevs = allData
           .filter((d) => d['Completion Status'] === 'Completed')
-          .reduce(
-            (sum, d) => sum + (parseInt(d['Quantity of Falcons']) || 0),
-            0
-          );
+          .reduce((sum, d) => sum + d['Quantity of Falcons'], 0);
         const completionRate =
           totalLocs > 0 ? Math.round((completed / totalLocs) * 100) : 0;
 
@@ -450,7 +479,13 @@
       }
 
       function updateCharts() {
-        // Status breakdown
+        updateStatusChart();
+        updateTimelineChart();
+        updateLineChart();
+        updateMonthlyChart();
+      }
+
+      function updateStatusChart() {
         const statusCounts = {};
         allData.forEach((d) => {
           const status = d['Completion Status'] || 'Unknown';
@@ -458,8 +493,9 @@
         });
 
         if (charts.statusChart) charts.statusChart.destroy();
-        const ctx1 = document.getElementById('statusChart').getContext('2d');
-        charts.statusChart = new Chart(ctx1, {
+
+        const ctx = document.getElementById('statusChart').getContext('2d');
+        charts.statusChart = new Chart(ctx, {
           type: 'doughnut',
           data: {
             labels: Object.keys(statusCounts),
@@ -473,44 +509,51 @@
           options: {
             responsive: true,
             maintainAspectRatio: true,
-            plugins: { legend: { position: 'bottom' } },
+            plugins: {
+              legend: {
+                position: 'bottom',
+              },
+            },
           },
         });
+      }
 
-        // Timeline
-        const completedData = allData.filter(
-          (d) =>
-            d['Completion Status'] === 'Completed' &&
-            d['Date Installed?'] &&
-            d['Date Installed?'] !== 'TBD'
-        );
+      function updateTimelineChart() {
+        // Get completed installations with valid dates
+        const completedData = allData.filter((d) => {
+          if (d['Completion Status'] !== 'Completed') return false;
+          const dateStr = d['Date Installed?'];
+          if (!dateStr || dateStr === 'TBD') return false;
+          const date = parseDate(dateStr);
+          return date && !isNaN(date.getTime());
+        });
 
-        const dateData = {};
+        // Group by date
+        const dateMap = new Map();
         completedData.forEach((d) => {
           const dateStr = formatDate(d['Date Installed?']);
-          if (dateStr && dateStr !== 'TBD') {
-            dateData[dateStr] =
-              (dateData[dateStr] || 0) +
-              parseInt(d['Quantity of Falcons'] || 1);
-          }
+          const current = dateMap.get(dateStr) || 0;
+          dateMap.set(dateStr, current + d['Quantity of Falcons']);
         });
 
-        const sortedDates = Object.keys(dateData).sort((a, b) => {
-          const parseDate = (str) => {
-            const [m, d, y] = str.split('/');
-            return new Date(`20${y}`, m - 1, d);
-          };
-          return parseDate(a) - parseDate(b);
+        // Sort dates chronologically
+        const sortedDates = Array.from(dateMap.keys()).sort((a, b) => {
+          const dateA = parseDate(a);
+          const dateB = parseDate(b);
+          return dateA - dateB;
         });
+
+        // Calculate cumulative
         let cumulative = 0;
         const cumulativeData = sortedDates.map((date) => {
-          cumulative += dateData[date];
+          cumulative += dateMap.get(date);
           return cumulative;
         });
 
         if (charts.timelineChart) charts.timelineChart.destroy();
-        const ctx2 = document.getElementById('timelineChart').getContext('2d');
-        charts.timelineChart = new Chart(ctx2, {
+
+        const ctx = document.getElementById('timelineChart').getContext('2d');
+        charts.timelineChart = new Chart(ctx, {
           type: 'line',
           data: {
             labels: sortedDates,
@@ -528,51 +571,19 @@
           options: {
             responsive: true,
             maintainAspectRatio: true,
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true } },
-          },
-        });
-
-        // Lines breakdown
-        updateLineChart();
-
-        // Monthly progress
-        const monthlyData = {};
-        completedData.forEach((d) => {
-          const dateStr = formatDate(d['Date Installed?']);
-          if (dateStr && dateStr !== 'TBD') {
-            const [m, day, y] = dateStr.split('/');
-            const monthKey = `20${y}-${m.padStart(2, '0')}`;
-            monthlyData[monthKey] =
-              (monthlyData[monthKey] || 0) +
-              parseInt(d['Quantity of Falcons'] || 1);
-          }
-        });
-
-        const sortedMonths = Object.keys(monthlyData).sort();
-
-        if (charts.monthlyChart) charts.monthlyChart.destroy();
-        const ctx4 = document.getElementById('monthlyChart').getContext('2d');
-        charts.monthlyChart = new Chart(ctx4, {
-          type: 'bar',
-          data: {
-            labels: sortedMonths.map((m) => {
-              const [year, month] = m.split('-');
-              return `${month}/${year}`;
-            }),
-            datasets: [
-              {
-                label: 'Devices Installed',
-                data: sortedMonths.map((m) => monthlyData[m]),
-                backgroundColor: '#10b981',
+            plugins: {
+              legend: {
+                display: false,
               },
-            ],
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true } },
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  precision: 0,
+                },
+              },
+            },
           },
         });
       }
@@ -598,29 +609,39 @@
           chartLabel = 'Planned Installs';
         }
 
-        const lineCounts = {};
+        // Count devices per line
+        const lineCounts = new Map();
         filteredData.forEach((d) => {
-          const lines = (d['MAX Lines'] || '').split(',');
+          const linesStr = d['MAX Lines'];
+          if (!linesStr) return;
+
+          // Split by comma and clean each line
+          const lines = linesStr
+            .split(',')
+            .map((line) => line.trim())
+            .filter((line) => line.length > 0);
+
           lines.forEach((line) => {
-            const trimmed = line.trim();
-            if (trimmed) {
-              lineCounts[trimmed] =
-                (lineCounts[trimmed] || 0) +
-                parseInt(d['Quantity of Falcons'] || 0);
-            }
+            const current = lineCounts.get(line) || 0;
+            lineCounts.set(line, current + d['Quantity of Falcons']);
           });
         });
 
+        // Sort lines for consistent display
+        const sortedLines = Array.from(lineCounts.keys()).sort();
+        const counts = sortedLines.map((line) => lineCounts.get(line));
+
         if (charts.lineChart) charts.lineChart.destroy();
-        const ctx3 = document.getElementById('lineChart').getContext('2d');
-        charts.lineChart = new Chart(ctx3, {
+
+        const ctx = document.getElementById('lineChart').getContext('2d');
+        charts.lineChart = new Chart(ctx, {
           type: 'bar',
           data: {
-            labels: Object.keys(lineCounts),
+            labels: sortedLines,
             datasets: [
               {
                 label: chartLabel,
-                data: Object.values(lineCounts),
+                data: counts,
                 backgroundColor: chartColor,
               },
             ],
@@ -628,20 +649,108 @@
           options: {
             responsive: true,
             maintainAspectRatio: true,
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true } },
+            plugins: {
+              legend: {
+                display: false,
+              },
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  precision: 0,
+                },
+              },
+            },
+          },
+        });
+      }
+
+      function updateMonthlyChart() {
+        // Get completed installations with valid dates
+        const completedData = allData.filter((d) => {
+          if (d['Completion Status'] !== 'Completed') return false;
+          const dateStr = d['Date Installed?'];
+          if (!dateStr || dateStr === 'TBD') return false;
+          const date = parseDate(dateStr);
+          return date && !isNaN(date.getTime());
+        });
+
+        // Group by month
+        const monthMap = new Map();
+        completedData.forEach((d) => {
+          const date = parseDate(d['Date Installed?']);
+          if (!date) return;
+
+          const year = date.getFullYear();
+          const month = date.getMonth() + 1;
+          const monthKey = `${year}-${String(month).padStart(2, '0')}`;
+
+          const current = monthMap.get(monthKey) || 0;
+          monthMap.set(monthKey, current + d['Quantity of Falcons']);
+        });
+
+        // Sort months chronologically
+        const sortedMonths = Array.from(monthMap.keys()).sort();
+        const counts = sortedMonths.map((month) => monthMap.get(month));
+
+        // Format labels as "Mon YYYY"
+        const labels = sortedMonths.map((monthKey) => {
+          const [year, month] = monthKey.split('-');
+          const date = new Date(year, parseInt(month) - 1, 1);
+          return date.toLocaleDateString('en-US', {
+            month: 'short',
+            year: 'numeric',
+          });
+        });
+
+        if (charts.monthlyChart) charts.monthlyChart.destroy();
+
+        const ctx = document.getElementById('monthlyChart').getContext('2d');
+        charts.monthlyChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: 'Devices Installed',
+                data: counts,
+                backgroundColor: '#10b981',
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+              legend: {
+                display: false,
+              },
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  precision: 0,
+                },
+              },
+            },
           },
         });
       }
 
       function formatLines(linesStr) {
         if (!linesStr) return '';
-        const lines = linesStr.split(',');
+
+        const lines = linesStr
+          .split(',')
+          .map((line) => line.trim())
+          .filter((line) => line.length > 0);
+
         return lines
           .map((line) => {
-            const trimmed = line.trim();
-            const className = trimmed.toLowerCase().replace(/\s+/g, '-');
-            return `<span class="line-tag line-${className}">${trimmed}</span>`;
+            const className = line.toLowerCase().replace(/\s+/g, '-');
+            return `<span class="line-tag line-${className}">${line}</span>`;
           })
           .join(' ');
       }
@@ -650,10 +759,19 @@
         const container = document.getElementById('tableContainer');
 
         if (allData.length === 0) {
-          container.innerHTML =
-            '<div class="no-data">No data available. Please upload a file or load sample data.</div>';
+          container.innerHTML = '<div class="no-data">No data available.</div>';
           return;
         }
+
+        const statusFilter = document.getElementById('statusFilter').value;
+        const lineFilter = document.getElementById('lineFilter').value;
+
+        const filteredData = allData.filter((d) => {
+          if (statusFilter && d['Completion Status'] !== statusFilter)
+            return false;
+          if (lineFilter && !d['MAX Lines'].includes(lineFilter)) return false;
+          return true;
+        });
 
         let html = '<table><thead><tr>';
         html += '<th>Stop ID</th>';
@@ -664,26 +782,15 @@
         html += '<th>Date Installed</th>';
         html += '</tr></thead><tbody>';
 
-        const statusFilter = document.getElementById('statusFilter').value;
-        const lineFilter = document.getElementById('lineFilter').value;
-
-        const filteredData = allData.filter((d) => {
-          if (statusFilter && d['Completion Status'] !== statusFilter)
-            return false;
-          if (lineFilter && !(d['MAX Lines'] || '').includes(lineFilter))
-            return false;
-          return true;
-        });
-
         filteredData.forEach((d) => {
           const status = d['Completion Status'] || 'Unknown';
           const statusClass = status.toLowerCase().replace(/\s+/g, '');
 
           html += '<tr>';
-          html += `<td>${d['Stop ID'] || 'N/A'}</td>`;
-          html += `<td>${d['Location Name'] || 'N/A'}</td>`;
+          html += `<td>${d['Stop ID']}</td>`;
+          html += `<td>${d['Location Name']}</td>`;
           html += `<td><span class="status-badge status-${statusClass}">${status}</span></td>`;
-          html += `<td>${d['Quantity of Falcons'] || 0}</td>`;
+          html += `<td>${d['Quantity of Falcons']}</td>`;
           html += `<td>${formatLines(d['MAX Lines'])}</td>`;
           html += `<td>${formatDate(d['Date Installed?'])}</td>`;
           html += '</tr>';
@@ -694,20 +801,27 @@
       }
 
       function updateFilters() {
+        // Get all unique lines
         const allLines = new Set();
         allData.forEach((d) => {
-          const lines = (d['MAX Lines'] || '').split(',');
-          lines.forEach((line) => {
-            const trimmed = line.trim();
-            if (trimmed) allLines.add(trimmed);
-          });
+          const linesStr = d['MAX Lines'];
+          if (!linesStr) return;
+
+          const lines = linesStr
+            .split(',')
+            .map((line) => line.trim())
+            .filter((line) => line.length > 0);
+          lines.forEach((line) => allLines.add(line));
         });
 
         const lineFilter = document.getElementById('lineFilter');
         lineFilter.innerHTML = '<option value="">All Lines</option>';
-        [...allLines].sort().forEach((line) => {
-          lineFilter.innerHTML += `<option value="${line}">${line}</option>`;
-        });
+
+        Array.from(allLines)
+          .sort()
+          .forEach((line) => {
+            lineFilter.innerHTML += `<option value="${line}">${line}</option>`;
+          });
       }
 
       function filterTable() {
